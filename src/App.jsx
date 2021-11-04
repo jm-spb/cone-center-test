@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const App = () => {
-  const [ input, setInput ] = useState('01/January/2021 20:00:05');
+  const [ input, setInput ] = useState('');
   const [ selectionStart, setSelectionStart ] = useState(0);
   const [ selectionEnd, setSelectionEnd ] = useState(0);
 
@@ -20,14 +20,6 @@ const App = () => {
     'December'
   ];
 
-  let [ day, month, year, hour, min, sec ] = input.split(/\W/);
-
-  let inputDate = new Date(input);
-
-  // console.log(selectionStart);
-  // console.log(selectionEnd);
-  // console.log(input.length);
-
   const ref = useRef();
 
   useEffect(
@@ -37,157 +29,229 @@ const App = () => {
     [ input, selectionStart, selectionEnd ]
   );
 
+  let [ day, month, year, hours, minutes, seconds ] = input.split(/\W/);
+  let inputDate = new Date(input);
+
+  let hoursStartPosition = false;
+  let minutesStartPosition = false;
+  let secondsStartPosition = false;
+
   const handleOnChange = (e) => {
     setInput(e.target.value);
+    setSelectionStart(e.target.value.length);
+    setSelectionEnd(e.target.value.length);
   };
 
-  const increment = (value) => {
-    if (Number.isFinite(Number(value))) {
-      value = (Number(value) + 1).toString();
-      value = value.length < 2 ? `0${value}` : value;
-    } else {
-      let idx = months.indexOf(value);
-      if (idx === 11) idx = -1;
-      value = months[idx + 1];
-    }
-    return value;
+  const convertToString = (value) => {
+    let valueAsString = value.toString();
+    valueAsString = valueAsString.length < 2 ? `0${valueAsString}` : valueAsString;
+    return valueAsString;
   };
 
-  const decrement = (value) => {
-    if (Number.isFinite(Number(value))) {
-      value = (Number(value) - 1).toString();
-      value = value.length < 2 ? `0${value}` : value;
-    } else {
-      let idx = months.indexOf(value);
-      if (idx === 0) idx = 12;
-      value = months[idx - 1];
-    }
-    return value;
-  };
+  const handleIncDec = (selected, incDecOption, toggleCtrlArrowPress) => {
+    let setDateValue;
 
-  const handleIncDecOnCtrlArrow = (selected, incDecOption) => {
-    let value;
     switch (selected) {
       case 'day':
-        value = incDecOption === 'increment' ? inputDate.getDate() + 1 : inputDate.getDate() - 1;
+        setDateValue =
+          incDecOption === 'increment'
+            ? inputDate.getDate(inputDate.setDate(inputDate.getDate() + 1))
+            : inputDate.getDate(inputDate.setDate(inputDate.getDate() - 1));
+        break;
+
+      case 'month':
+        setDateValue = incDecOption === 'increment' ? months.indexOf(month) + 1 : months.indexOf(month) - 1;
+
+        if (setDateValue === 12) setDateValue = 0;
+        if (setDateValue === -1) setDateValue = 11;
+
+        if (toggleCtrlArrowPress) {
+          setDateValue =
+            incDecOption === 'increment'
+              ? inputDate.getMonth(inputDate.setMonth(inputDate.getMonth() + 1))
+              : inputDate.getMonth(inputDate.setMonth(inputDate.getMonth() - 1));
+        }
+        break;
+
+      case 'year':
+        setDateValue =
+          incDecOption === 'increment'
+            ? inputDate.getFullYear(inputDate.setFullYear(inputDate.getFullYear() + 1))
+            : inputDate.getFullYear(inputDate.setFullYear(inputDate.getFullYear() - 1));
+        break;
+
+      case 'hours':
+        setDateValue =
+          incDecOption === 'increment'
+            ? inputDate.getHours(inputDate.setHours(inputDate.getHours() + 1))
+            : inputDate.getHours(inputDate.setHours(inputDate.getHours() - 1));
+        break;
+
+      case 'minutes':
+        setDateValue =
+          incDecOption === 'increment'
+            ? inputDate.getMinutes(inputDate.setMinutes(inputDate.getMinutes() + 1))
+            : inputDate.getMinutes(inputDate.setMinutes(inputDate.getMinutes() - 1));
+        break;
+
+      case 'seconds':
+        setDateValue =
+          incDecOption === 'increment'
+            ? inputDate.getSeconds(inputDate.setSeconds(inputDate.getSeconds() + 1))
+            : inputDate.getSeconds(inputDate.setSeconds(inputDate.getSeconds() - 1));
         break;
 
       default:
         break;
     }
 
-    return value;
+    return setDateValue;
   };
 
-  const handleIncDec = (posStart, posEnd, toggleIncDec, onCtrlArrowPress, toggleIncDecOnCtrlArrow, incDecOption) => {
-    let value;
+  const captureSelectedInput = (posStart, posEnd, toggleIncDec, incDecOption, toggleCtrlArrowPress) => {
+    let setInputValue;
+
     if (posStart === -1) {
-      value = day;
-      day = onCtrlArrowPress ? toggleIncDecOnCtrlArrow('day', incDecOption) : toggleIncDec(value);
+      day = toggleIncDec('day', incDecOption);
+      setInputValue = day;
+
+      if (toggleCtrlArrowPress) {
+        inputDate.setDate(day);
+      }
     }
     if (posStart === 2) {
-      value = month;
-      month = toggleIncDec(value);
-      value = month;
+      const monthNumber = toggleIncDec('month', incDecOption, toggleCtrlArrowPress);
+      month = months[monthNumber];
+      setInputValue = month;
+
+      if (toggleCtrlArrowPress) {
+        inputDate.setMonth(monthNumber);
+      }
     }
     if (posEnd === input.length - 9) {
-      value = year;
-      year = toggleIncDec(value);
+      year = toggleIncDec('year', incDecOption);
+      setInputValue = year;
+
+      if (toggleCtrlArrowPress) {
+        inputDate.setFullYear(year);
+      }
     }
     if (posEnd === input.length - 6) {
-      value = hour;
-      hour = toggleIncDec(value);
+      hours = toggleIncDec('hours', incDecOption);
+      setInputValue = hours;
+
+      if (toggleCtrlArrowPress) {
+        inputDate.setHours(hours);
+        hoursStartPosition = true;
+      }
     }
     if (posEnd === input.length - 3) {
-      value = min;
-      min = toggleIncDec(value);
+      minutes = toggleIncDec('minutes', incDecOption);
+      setInputValue = minutes;
+
+      if (toggleCtrlArrowPress) {
+        inputDate.setMinutes(minutes);
+        minutesStartPosition = true;
+      }
     }
     if (posEnd === input.length) {
-      value = sec;
-      sec = toggleIncDec(value);
+      seconds = toggleIncDec('seconds', incDecOption);
+      setInputValue = seconds;
+
+      if (toggleCtrlArrowPress) {
+        inputDate.setSeconds(seconds);
+        secondsStartPosition = true;
+      }
     }
 
-    return value;
+    return convertToString(setInputValue);
   };
 
-  // const handleDateFormat = () => {
-  //   if (hour === '24') hour = '00';
-  //   if (hour === '-1') hour = '23';
-  //   if (min === '60') min = '00';
-  //   if (min === '-1') min = '59';
-  //   if (sec === '60') sec = '00';
-  //   if (sec === '-1') sec = '59';
-  // };
+  const handleDateChange = (startSelection, endSelection, incDecOption, toggleCtrlArrowPress) => {
+    let newValue = captureSelectedInput(startSelection, endSelection, handleIncDec, incDecOption, toggleCtrlArrowPress);
 
-  // const onCtrlArrowPress = (toggleIncDec) => {
-  //   if (min === '60') {
-  //     hour = toggleIncDec(hour);
-  //   }
-  //   if (min === '-1') {
-  //     hour = toggleIncDec(hour);
-  //   }
-  //   if (sec === '60') {
-  //     min = toggleIncDec(min);
-  //   }
-  //   if (sec === '-1') {
-  //     min = toggleIncDec(min);
-  //   }
-  // };
-
-  const handleType = (e) => {
-    const caretPosition = e.target.selectionStart;
-
-    let start = caretPosition;
-    let end = caretPosition;
-
-    const inputArrayOfChars = e.target.value.split('');
-    const matсhes = e.target.value.match(/[a-zA-Z]|\d/g);
-
-    // Selection from current caret position to right
-    do {
-      if (!matсhes.includes(inputArrayOfChars[end])) {
-        end -= 1;
-      }
-      end += 1;
-    } while (matсhes.includes(inputArrayOfChars[end]));
-
-    // Selection from current caret position to left
-    do {
-      start -= 1;
-    } while (matсhes.includes(inputArrayOfChars[start]));
-
-    // Arrow Up
-    if (e.keyCode === 38) {
-      e.preventDefault();
-
-      // let newValue = handleIncDec(start, end, increment);
-
-      if (e.ctrlKey) {
-        // onCtrlArrowPress(increment);
-      }
-
-      // handleDateFormat();
-
-      setInput(`${day}/${month}/${year} ${hour}:${min}:${sec}`);
-      setSelectionStart(start + 1);
-      setSelectionEnd(start + 1 + newValue.length);
+    if (toggleCtrlArrowPress) {
+      day = inputDate.getDate();
+      month = months[inputDate.getMonth()];
+      year = inputDate.getFullYear();
+      hours = inputDate.getHours();
+      minutes = inputDate.getMinutes();
+      seconds = inputDate.getSeconds();
     }
 
-    // Arrow Down
-    if (e.keyCode === 40) {
-      e.preventDefault();
+    day = convertToString(day);
+    year = convertToString(year);
+    hours = convertToString(hours);
+    minutes = convertToString(minutes);
+    seconds = convertToString(seconds);
 
-      let newValue = handleIncDec(start, end, decrement);
+    let newInput = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 
-      // if (e.ctrlKey) {
-      //   onCtrlArrowPress(decrement);
-      // }
+    if (hoursStartPosition) {
+      startSelection = newInput.length - 9;
+    }
 
-      // handleDateFormat();
+    if (minutesStartPosition) {
+      startSelection = newInput.length - 6;
+    }
 
-      setInput(`${day}/${month}/${year} ${hour}:${min}:${sec}`);
-      setSelectionStart(start + 1);
-      setSelectionEnd(start + 1 + newValue.length);
+    if (secondsStartPosition) {
+      startSelection = newInput.length - 3;
+    }
+
+    setInput(newInput);
+    setSelectionStart(startSelection + 1);
+    setSelectionEnd(startSelection + 1 + newValue.length);
+  };
+
+  let change = false;
+
+  const handleType = (e) => {
+    if (change) {
+      const caretPosition = e.target.selectionStart;
+
+      let start = caretPosition;
+      let end = caretPosition;
+
+      const inputArrayOfChars = e.target.value.split('');
+      const matсhes = e.target.value.match(/[a-zA-Z]|\d/g);
+
+      // Selection from current caret position to right
+      do {
+        if (!matсhes.includes(inputArrayOfChars[end])) {
+          end -= 1;
+        }
+        end += 1;
+      } while (matсhes.includes(inputArrayOfChars[end]));
+
+      // Selection from current caret position to left
+      do {
+        start -= 1;
+      } while (matсhes.includes(inputArrayOfChars[start]));
+
+      // Arrow Up
+      if (e.keyCode === 38 && !e.ctrlKey) {
+        e.preventDefault();
+        handleDateChange(start, end, 'increment', false);
+      }
+
+      // Arrow Down
+      if (e.keyCode === 40 && !e.ctrlKey) {
+        e.preventDefault();
+        handleDateChange(start, end, 'decrement', false);
+      }
+
+      // Ctrl + Arrow Up
+      if (e.keyCode === 38 && e.ctrlKey) {
+        e.preventDefault();
+        handleDateChange(start, end, 'increment', true);
+      }
+
+      // Ctrl + Arrow Down
+      if (e.keyCode === 40 && e.ctrlKey) {
+        e.preventDefault();
+        handleDateChange(start, end, 'decrement', true);
+      }
     }
   };
 
