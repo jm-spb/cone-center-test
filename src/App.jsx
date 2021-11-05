@@ -36,6 +36,10 @@ const App = () => {
   let minutesStartPosition = false;
   let secondsStartPosition = false;
 
+  let changeInput = false;
+
+  const changeInputRegExp = /[0-9]{2}\/[a-zA-Z]{3,}\/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}/g;
+
   const handleOnChange = (e) => {
     setInput(e.target.value);
     setSelectionStart(e.target.value.length);
@@ -204,14 +208,39 @@ const App = () => {
     setSelectionEnd(startSelection + 1 + newValue.length);
   };
 
-  let change = false;
+  if (input.match(changeInputRegExp)) changeInput = true;
 
   const handleType = (e) => {
-    if (change) {
-      const caretPosition = e.target.selectionStart;
+    // Parse input to valid date format on Enter key
+    if (e.keyCode === 13) {
+      let [ inputDay, inputMonth, inputYear, inputHours, inputMinutes, inputSeconds ] = input.split(' ');
 
-      let start = caretPosition;
-      let end = caretPosition;
+      let newInputDate = new Date(
+        inputYear || '2000',
+        inputMonth - 1 || '0',
+        inputDay || '01',
+        inputHours || '00',
+        inputMinutes || '00',
+        inputSeconds || '00'
+      );
+
+      day = newInputDate.getDate();
+      month = months[newInputDate.getMonth()];
+      year = newInputDate.getFullYear();
+      hours = newInputDate.getHours();
+      minutes = newInputDate.getMinutes();
+      seconds = newInputDate.getSeconds();
+
+      const newPaseInput = `${convertToString(day)}/${month}/${convertToString(year)} ${convertToString(
+        hours
+      )}:${convertToString(minutes)}:${convertToString(seconds)}`;
+
+      setInput(newPaseInput);
+    }
+
+    if (changeInput) {
+      let start = e.target.selectionStart;
+      let end = e.target.selectionStart;
 
       const inputArrayOfChars = e.target.value.split('');
       const matсhes = e.target.value.match(/[a-zA-Z]|\d/g);
