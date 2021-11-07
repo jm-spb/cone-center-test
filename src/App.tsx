@@ -281,7 +281,7 @@ const App = () => {
       }
 
       let newInputDate = new Date(
-        parseInt(inputYear) || 2000,
+        parseInt(inputYear) || 2021,
         inputMonthInt || 0,
         parseInt(inputDay) || 1,
         parseInt(inputHours) || 0,
