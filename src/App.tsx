@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+import './App.css';
+
 const App = () => {
   const [ input, setInput ] = useState('');
   const [ selectionStart, setSelectionStart ] = useState(0);
@@ -345,8 +347,16 @@ const App = () => {
   };
 
   return (
-    <div>
-      <input ref={ref} type="text" value={input} name="date" onChange={handleOnChange} onKeyDown={handleType} />
+    <div className="wrapper">
+      <input
+        className="input"
+        ref={ref}
+        type="text"
+        value={input}
+        name="date"
+        onChange={handleOnChange}
+        onKeyDown={handleType}
+      />
     </div>
   );
 };
